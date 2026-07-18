@@ -1,0 +1,408 @@
+You are a senior full-stack software engineer, UI/UX designer, and AI product architect.
+
+Build a modern, production-quality AI-powered web application called:
+
+Cyber ​​Inspector AI
+Tagline:
+"Analyze. Detect. Protect."
+
+The website must be fully responsive, visually stunning, and feel like a cybersecurity product.
+
+====================================================
+GOAL
+====================================================
+
+Shield AI helps users detect potential online scams, phishing attempts, suspicious links, fake messages, and fraudulent emails using AI.
+
+The platform DOES NOT replace official authorities.
+Instead, it analyzes digital evidence and guides users toward the correct next action.
+
+====================================================
+TARGET USERS
+====================================================
+
+General users with little cybersecurity knowledge.
+
+The experience should be simple enough that anyone can use it.
+
+====================================================
+LANGUAGES
+====================================================
+
+Support full localization.
+
+Arabic (RTL)
+
+English (LTR)
+
+There should be a language switcher in the navbar.
+
+Every UI element must instantly switch languages.
+
+====================================================
+DESIGN
+====================================================
+
+Theme:
+
+Cybersecurity
+
+Modern
+
+Premium
+
+Minimal
+
+Colors:
+
+Black background
+
+Dark gray surfaces
+
+Purple accents (#8B5CF6)
+
+Soft glowing borders
+
+Neon effects only where appropriate
+
+Rounded cards
+
+Glassmorphism
+
+Smooth animations
+
+Modern icons
+
+The homepage should immediately feel like an AI security platform.
+
+====================================================
+HOME PAGE
+====================================================
+
+Hero Section
+
+Large title
+
+Shield AI
+
+Subtitle:
+
+"AI-powered scam detection for everyone."
+
+Primary button:
+
+Analyze Now
+
+Secondary button:
+
+Learn More
+
+Animated cyber background
+
+====================================================
+ANALYSIS SECTION
+====================================================
+
+The main feature.
+
+Users can choose one of:
+
+1. Upload Image
+
+PNG
+
+JPG
+
+JPEG
+
+Screenshots
+
+2. Paste Text
+
+Emails
+
+SMS
+
+WhatsApp
+
+Social media messages
+
+3. Analyze URL
+
+Paste any website link
+
+One Analyze button.
+
+====================================================
+AI ANALYSIS
+====================================================
+
+When Analyze is clicked:
+
+Show loading animation.
+
+Optional futuristic scanning animation.
+
+Optional subtle sound effect.
+
+The AI analyzes:
+
+Scam indicators
+
+Phishing
+
+Urgency language
+
+Suspicious domains
+
+Requests for passwords
+
+Requests for bank information
+
+Fake identities
+
+Impersonation
+
+Social engineering techniques
+
+====================================================
+RESULT PAGE
+====================================================
+
+Display:
+
+Threat Score
+
+0–100
+
+Green
+
+Yellow
+
+Orange
+
+Red
+
+Risk Level
+
+Safe
+
+Low Risk
+
+Suspicious
+
+Dangerous
+
+Summary
+
+Explain in simple language.
+
+====================================================
+WHY?
+====================================================
+
+Show AI explanation.
+
+Example:
+
+This message creates urgency.
+
+The URL is suspicious.
+
+The sender imitates a bank.
+
+The message asks for personal information.
+
+====================================================
+RECOMMENDED ACTIONS
+====================================================
+
+Generate personalized recommendations.
+
+Examples:
+
+Do not click the link.
+
+Block the sender.
+
+Report the message.
+
+Contact the official company.
+
+Delete the email.
+
+====================================================
+AI EVIDENCE REPORT
+====================================================
+
+Generate a beautiful downloadable report.
+
+Include:
+
+Analysis date
+
+Threat Score
+
+Summary
+
+Detected indicators
+
+Recommendations
+
+PDF export
+
+====================================================
+RESPONSE CENTER
+====================================================
+
+Create a dedicated section called:
+
+Response Center
+
+Purpose:
+
+Help users continue after analysis.
+
+Display beautiful cards.
+
+Examples:
+
+Verify Link
+
+Report Fraud
+
+Cybersecurity Tips
+
+Emergency Contacts
+
+Each card opens an external website in a new tab.
+
+Store all URLs inside one configuration file:
+
+config/response-links.ts
+
+Example:
+
+verifyLink
+
+reportFraud
+
+governmentPortal
+
+securityAwareness
+
+Do not hardcode URLs throughout the project.
+
+====================================================
+DISCLAIMER
+====================================================
+
+Show disclaimer.
+
+AI may make mistakes.
+
+Always verify with official authorities.
+
+====================================================
+HISTORY
+====================================================
+
+Save previous analyses locally.
+
+Allow users to reopen old reports.
+
+====================================================
+ACCESSIBILITY
+====================================================
+
+Keyboard friendly.
+
+Screen-reader friendly.
+
+Proper color contrast.
+
+====================================================
+ANIMATIONS
+====================================================
+
+Use Framer Motion.
+
+Smooth page transitions.
+
+Hover effects.
+
+Loading shimmer.
+
+Cyber scanning animation.
+
+Optional click sounds.
+
+Optional scan sound.
+
+Allow sounds to be muted.
+
+====================================================
+TECH STACK
+====================================================
+
+React
+
+TypeScript
+
+Vite
+
+TailwindCSS
+
+shadcn/ui
+
+Framer Motion
+
+Lucide Icons
+
+React Router
+
+====================================================
+PROJECT STRUCTURE
+====================================================
+
+Organize code professionally.
+
+components
+
+pages
+
+hooks
+
+lib
+
+services
+
+config
+
+assets
+
+====================================================
+CODE QUALITY
+====================================================
+
+Reusable components.
+
+Clean architecture.
+
+Modern React patterns.
+
+Readable code.
+
+====================================================
+IMPORTANT
+====================================================
+
+For now, simulate AI responses with mock data.
+
+Create the project in a way that later allows replacing the mock analysis with a real AI API without changing the UI.
+
+Everything should be scalable.
+
+Everything should look like a real startup product.
+
+The final result should look like a professional SaaS application rather than a hackathon prototype.

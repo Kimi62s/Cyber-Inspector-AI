@@ -1,0 +1,42 @@
+export const RESPONSE_LINKS = {
+  verifyLink: {
+    title: 'Verify Link',
+    titleAr: 'التحقق من الرابط',
+    description: 'Check if a URL is safe using VirusTotal',
+    descriptionAr: 'تحقق من سلامة الرابط باستخدام VirusTotal',
+    url: 'https://www.virustotal.com',
+    icon: 'Shield',
+  },
+  reportFraud: {
+    title: 'Report Fraud',
+    titleAr: 'الإبلاغ عن الاحتيال',
+    description: 'Report scams to IC3 (FBI Internet Crime Center)',
+    descriptionAr: 'أبلغ عن عمليات الاحتيال إلى IC3',
+    url: 'https://www.ic3.gov',
+    icon: 'AlertTriangle',
+  },
+  governmentPortal: {
+    title: 'Government Portal',
+    titleAr: 'البوابة الحكومية',
+    description: 'Official cybercrime reporting portal',
+    descriptionAr: 'بوابة الإبلاغ الرسمية عن الجرائم الإلكترونية',
+    url: 'https://www.cisa.gov/report',
+    icon: 'Building2',
+  },
+  securityAwareness: {
+    title: 'Security Tips',
+    titleAr: 'نصائح الأمان',
+    description: 'Learn to protect yourself online',
+    descriptionAr: 'تعلم كيف تحمي نفسك على الإنترنت',
+    url: 'https://www.cisa.gov/cybersecurity',
+    icon: 'BookOpen',
+  },
+  emergencyContacts: {
+    title: 'Emergency Contacts',
+    titleAr: 'جهات الاتصال الطارئة',
+    description: 'Contact cybersecurity authorities immediately',
+    descriptionAr: 'تواصل فوراً مع سلطات الأمن السيبراني',
+    url: 'https://www.cisa.gov/contact-us',
+    icon: 'Phone',
+  },
+};
