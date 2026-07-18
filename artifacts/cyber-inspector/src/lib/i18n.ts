@@ -9,7 +9,7 @@ export const translations = {
     learnMore: 'Learn More',
     history: 'History',
     // hero
-    heroTitle: 'Shield AI',
+    heroTitle: 'Cyber Inspector AI',
     heroSubtitle: 'AI-powered scam detection for everyone.',
     // analysis section
     analyzeTitle: 'Analyze Suspicious Content',
@@ -61,7 +61,7 @@ export const translations = {
     analyzeNow: 'تحليل الآن',
     learnMore: 'اعرف المزيد',
     history: 'السجل',
-    heroTitle: 'شيلد AI',
+    heroTitle: 'سايبر إنسبكتور AI',
     heroSubtitle: 'كشف الاحتيال بالذكاء الاصطناعي للجميع.',
     analyzeTitle: 'تحليل المحتوى المشبوه',
     analyzeSubtitle: 'الصق النص، أدخل رابطًا، أو ارفع صورة',
