@@ -37,7 +37,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto"
+              className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto font-medium"
             >
               {t('heroSubtitle')}
             </motion.p>
@@ -62,7 +62,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* Features Section */}
       <section id="features" className="py-24 relative bg-background/50 backdrop-blur-sm border-t border-border">
         <div className="container mx-auto px-4">
@@ -88,15 +87,12 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* Response Center */}
       <ResponseCenter />
-
       {/* History Section */}
       <section className="py-16 container mx-auto px-4 max-w-4xl">
         <HistoryPanel />
       </section>
-
       {/* Disclaimer */}
       <section className="py-12 pb-24 container mx-auto px-4 max-w-4xl">
         <div className="p-6 rounded-xl border border-chart-3/30 bg-chart-3/5 text-chart-3 flex items-start gap-4">
