@@ -54,6 +54,7 @@ export const translations = {
     exampleText: 'Load Example Text',
     exampleUrl: 'Load Example URL',
     scanInProgress: 'AI is scanning...',
+    openResource: 'Open Resource',
   },
   ar: {
     appName: 'المفتش السيبراني الذكي',
@@ -98,5 +99,6 @@ export const translations = {
     exampleText: 'تحميل نص تجريبي',
     exampleUrl: 'تحميل رابط تجريبي',
     scanInProgress: 'الذكاء الاصطناعي يقوم بالمسح...',
+    openResource: 'فتح المورد',
   },
 };

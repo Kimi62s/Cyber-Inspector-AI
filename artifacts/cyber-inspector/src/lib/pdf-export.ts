@@ -2,98 +2,134 @@ import jsPDF from 'jspdf';
 import { AnalysisResult } from '../services/analysis.service';
 import { Language, translations } from './i18n';
 
+const PAGE_HEIGHT = 280; // usable height before footer zone (A4 = 297mm, margin 10mm)
+const MARGIN_X = 20;
+
+function checkPageBreak(doc: jsPDF, cursorY: number, needed = 10): number {
+  if (cursorY + needed > PAGE_HEIGHT) {
+    doc.addPage();
+    return 20; // reset to top margin of new page
+  }
+  return cursorY;
+}
+
 export function generateReport(result: AnalysisResult, language: Language): void {
   const doc = new jsPDF();
-  const t = translations[language];
-  const isRtl = language === 'ar';
-  
-  // Standard simple layout
-  const marginX = 20;
+  // Always use English for PDF — jsPDF's built-in fonts don't render Arabic
+  const tPdf = translations['en'];
+
   let cursorY = 20;
 
-  // Since standard jsPDF doesn't support Arabic natively without custom fonts, 
-  // for this exercise, we will fallback to English if standard rendering fails, 
-  // or just use basic ASCII in our PDF.
-  // Real world: we'd need to add a TTF font and addFileToVFS for Arabic support.
-  // Here we will use standard jsPDF text but stick to English for reliability in the PDF output
-  // to prevent garbage text rendering.
-  const langToUse = 'en'; // Force EN for PDF standard font compatibility
-  const tPdf = translations[langToUse];
+  // ── Header ──────────────────────────────────────────────────────────────
+  doc.setFontSize(18);
+  doc.setTextColor(139, 92, 246); // purple
+  doc.text('CYBER INSPECTOR AI — ANALYSIS REPORT', MARGIN_X, cursorY);
 
-  // Header
-  doc.setFontSize(22);
-  doc.setTextColor(139, 92, 246); // Purple
-  doc.text('CYBER INSPECTOR AI - ANALYSIS REPORT', marginX, cursorY);
-  
-  cursorY += 15;
-  doc.setFontSize(12);
-  doc.setTextColor(50, 50, 50);
-  doc.text(`Report ID: ${result.id}`, marginX, cursorY);
-  cursorY += 8;
-  doc.text(`Date: ${new Date(result.timestamp).toLocaleString()}`, marginX, cursorY);
-  
-  cursorY += 15;
-  
-  // Score
-  doc.setFontSize(16);
-  doc.setTextColor(0, 0, 0);
-  doc.text(`${tPdf.threatScore}: ${result.threatScore}/100`, marginX, cursorY);
-  cursorY += 8;
-  doc.text(`${tPdf.riskLevel}: ${result.riskLevel.toUpperCase()}`, marginX, cursorY);
-  
-  cursorY += 15;
-  
-  // Summary
+  cursorY += 12;
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 120);
+  doc.text(`Report ID: ${result.id}`, MARGIN_X, cursorY);
+  cursorY += 6;
+  doc.text(`Date: ${new Date(result.timestamp).toLocaleString()}`, MARGIN_X, cursorY);
+  cursorY += 6;
+  doc.text(`Analysis Type: ${result.type.toUpperCase()}`, MARGIN_X, cursorY);
+
+  cursorY += 12;
+
+  // Divider line
+  doc.setDrawColor(139, 92, 246);
+  doc.setLineWidth(0.5);
+  doc.line(MARGIN_X, cursorY, 190, cursorY);
+  cursorY += 12;
+
+  // ── Score & Risk ────────────────────────────────────────────────────────
+  cursorY = checkPageBreak(doc, cursorY, 20);
   doc.setFontSize(14);
-  doc.setTextColor(139, 92, 246);
-  doc.text(tPdf.summary, marginX, cursorY);
-  cursorY += 8;
-  
-  doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`${tPdf.threatScore}: ${result.threatScore} / 100`, MARGIN_X, cursorY);
+  cursorY += 8;
+  doc.text(`${tPdf.riskLevel}: ${result.riskLevel.toUpperCase()}`, MARGIN_X, cursorY);
+  cursorY += 14;
+
+  // ── Summary ─────────────────────────────────────────────────────────────
+  cursorY = checkPageBreak(doc, cursorY, 20);
+  doc.setFontSize(13);
+  doc.setTextColor(139, 92, 246);
+  doc.setFont('helvetica', 'bold');
+  doc.text(tPdf.summary, MARGIN_X, cursorY);
+  cursorY += 8;
+
+  doc.setFontSize(11);
+  doc.setTextColor(30, 30, 30);
+  doc.setFont('helvetica', 'normal');
   const splitSummary = doc.splitTextToSize(result.summary, 170);
-  doc.text(splitSummary, marginX, cursorY);
-  cursorY += (splitSummary.length * 7) + 10;
-  
-  // Indicators
-  doc.setFontSize(14);
+  cursorY = checkPageBreak(doc, cursorY, splitSummary.length * 6 + 4);
+  doc.text(splitSummary, MARGIN_X, cursorY);
+  cursorY += splitSummary.length * 6 + 10;
+
+  // ── Indicators ──────────────────────────────────────────────────────────
+  cursorY = checkPageBreak(doc, cursorY, 20);
+  doc.setFontSize(13);
   doc.setTextColor(139, 92, 246);
-  doc.text(tPdf.whyDangerous, marginX, cursorY);
+  doc.setFont('helvetica', 'bold');
+  doc.text(tPdf.whyDangerous, MARGIN_X, cursorY);
   cursorY += 8;
-  
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  result.indicators.forEach(ind => {
-    doc.setFont('', 'bold');
-    doc.text(`- ${ind.type} (${ind.severity})`, marginX, cursorY);
-    doc.setFont('', 'normal');
+
+  doc.setFontSize(11);
+  doc.setTextColor(30, 30, 30);
+  result.indicators.forEach((ind) => {
+    const headerNeeded = 8;
+    cursorY = checkPageBreak(doc, cursorY, headerNeeded);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`• ${ind.type} [${ind.severity.toUpperCase()}]`, MARGIN_X, cursorY);
     cursorY += 6;
-    const desc = doc.splitTextToSize(`  ${ind.description}`, 170);
-    doc.text(desc, marginX, cursorY);
-    cursorY += (desc.length * 7) + 4;
+
+    doc.setFont('helvetica', 'normal');
+    const desc = doc.splitTextToSize(`  ${ind.description}`, 168);
+    cursorY = checkPageBreak(doc, cursorY, desc.length * 6 + 4);
+    doc.text(desc, MARGIN_X, cursorY);
+    cursorY += desc.length * 6 + 4;
   });
-  
-  cursorY += 5;
-  
-  // Recommendations
-  doc.setFontSize(14);
+
+  cursorY += 6;
+
+  // ── Recommendations ─────────────────────────────────────────────────────
+  cursorY = checkPageBreak(doc, cursorY, 20);
+  doc.setFontSize(13);
   doc.setTextColor(139, 92, 246);
-  doc.text(tPdf.recommendations, marginX, cursorY);
+  doc.setFont('helvetica', 'bold');
+  doc.text(tPdf.recommendations, MARGIN_X, cursorY);
   cursorY += 8;
-  
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
+
+  doc.setFontSize(11);
+  doc.setTextColor(30, 30, 30);
   result.recommendations.forEach((rec, idx) => {
     const text = doc.splitTextToSize(`${idx + 1}. ${rec}`, 170);
-    doc.text(text, marginX, cursorY);
-    cursorY += (text.length * 7) + 2;
+    cursorY = checkPageBreak(doc, cursorY, text.length * 6 + 4);
+    doc.setFont('helvetica', 'normal');
+    doc.text(text, MARGIN_X, cursorY);
+    cursorY += text.length * 6 + 3;
   });
-  
-  // Footer
-  cursorY = 280;
-  doc.setFontSize(10);
+
+  // ── Footer ──────────────────────────────────────────────────────────────
+  // Always on the last page, below content
+  const footerY = Math.max(cursorY + 16, 270);
+  // If footerY would overflow, add a new page
+  const totalPages = (doc as any).internal.getNumberOfPages();
+  if (footerY > PAGE_HEIGHT + 10) {
+    doc.addPage();
+  }
+  const finalFooterY = footerY > PAGE_HEIGHT + 10 ? 20 : footerY;
+
+  doc.setFontSize(9);
   doc.setTextColor(150, 150, 150);
-  doc.text('This report was generated by Cyber Inspector AI. For educational purposes only.', marginX, cursorY);
-  
+  doc.setFont('helvetica', 'normal');
+  doc.text(
+    'This report was generated by Cyber Inspector AI. For educational purposes only.',
+    MARGIN_X,
+    finalFooterY,
+  );
+
   doc.save(`cyber-inspector-report-${result.id}.pdf`);
 }
