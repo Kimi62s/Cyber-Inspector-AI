@@ -22,4 +22,3 @@ timeoutMs = 20000
 [userenv]
 
 [userenv.shared]
-VIRUSTOTAL_API_KEY = "0b9430123f009cc94112a3bbc3cd61eb3779544a6caa3fa1b2be389e5bf1c9f0"

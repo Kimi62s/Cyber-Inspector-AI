@@ -34,16 +34,25 @@ interface AnalysisResult {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function computeThreatScore(vtStats: VTStats, heuristicScore: number): number {
-  // Each malicious detection = 8pts, each suspicious = 3pts, hard-capped at 100
-  const vtContribution = Math.min(100, vtStats.malicious * 8 + vtStats.suspicious * 3);
-  return Math.max(heuristicScore, vtContribution);
+function computeThreatScore(vtStats: VTStats): number {
+  // VirusTotal is the sole source of truth when its data is present.
+  // The heuristic is NOT mixed in — it only applies in the no-VT fallback path.
+  if (vtStats.malicious === 0 && vtStats.suspicious === 0) {
+    // Completely clean scan → Safe range (0–10).
+    // A strongly negative community reputation adds a small nudge (still capped at 10).
+    const repPenalty = vtStats.reputation < -10
+      ? Math.min(5, Math.floor(Math.abs(vtStats.reputation) / 20))
+      : 0;
+    return Math.min(10, 3 + repPenalty);
+  }
+  // Each malicious engine ≈ 8 pts, each suspicious ≈ 3 pts, hard-capped at 100.
+  return Math.min(100, vtStats.malicious * 8 + vtStats.suspicious * 3);
 }
 
 function deriveRiskLevel(score: number): RiskLevel {
-  if (score >= 76) return 'dangerous';
-  if (score >= 51) return 'suspicious';
-  if (score >= 26) return 'low';
+  if (score >= 61) return 'dangerous';
+  if (score >= 31) return 'suspicious';
+  if (score >= 11) return 'low';
   return 'safe';
 }
 
@@ -250,12 +259,13 @@ function buildRecommendations(
 }
 
 function heuristicScore(url: string): number {
+  // Used ONLY in the no-VT fallback path. Thresholds match the new risk bands.
   const lower = url.toLowerCase();
   const dangerous = ['bank', 'password', 'urgent', 'verify', 'secure', 'account', 'winner', 'prize', '.xyz', '.tk', '.ml'];
   const hasDangerous = dangerous.some(kw => lower.includes(kw));
   return hasDangerous
-    ? Math.floor(Math.random() * 26 + 55)  // 55–80
-    : Math.floor(Math.random() * 31 + 5);  // 5–35
+    ? Math.floor(Math.random() * 30 + 61)  // 61–90  → Dangerous
+    : Math.floor(Math.random() * 8 + 2);   // 2–9    → Safe
 }
 
 function buildFallbackResult(url: string): AnalysisResult {
@@ -329,8 +339,7 @@ router.post('/analyze/url', async (req: Request, res: Response) => {
   }
 
   // ── Build combined result ──────────────────────────────────────────────────
-  const baseHeuristic = heuristicScore(url);
-  const threatScore = computeThreatScore(vtStats, baseHeuristic);
+  const threatScore = computeThreatScore(vtStats);
   const riskLevel = deriveRiskLevel(threatScore);
   const { summary, summaryAr } = generateSummary(vtStats, url);
   const indicators = buildIndicators(vtStats, url);
