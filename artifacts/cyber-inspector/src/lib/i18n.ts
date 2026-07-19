@@ -55,6 +55,16 @@ export const translations = {
     exampleUrl: 'Load Example URL',
     scanInProgress: 'AI is scanning...',
     openResource: 'Open Resource',
+    // VirusTotal panel
+    vtTitle: 'VirusTotal Scan',
+    vtEngines: 'Security Engines',
+    vtMalicious: 'Malicious',
+    vtSuspicious: 'Suspicious',
+    vtHarmless: 'Harmless',
+    vtUndetected: 'Undetected',
+    vtReputation: 'Community Reputation',
+    vtViewFull: 'View Full Report on VirusTotal',
+    vtFallback: 'VirusTotal data unavailable — result based on heuristic analysis.',
   },
   ar: {
     appName: 'المفتش السيبراني الذكي',
@@ -100,5 +110,15 @@ export const translations = {
     exampleUrl: 'تحميل رابط تجريبي',
     scanInProgress: 'الذكاء الاصطناعي يقوم بالمسح...',
     openResource: 'فتح المورد',
+    // VirusTotal panel
+    vtTitle: 'فحص VirusTotal',
+    vtEngines: 'محركات الأمان',
+    vtMalicious: 'ضار',
+    vtSuspicious: 'مشبوه',
+    vtHarmless: 'آمن',
+    vtUndetected: 'غير محدد',
+    vtReputation: 'سمعة المجتمع',
+    vtViewFull: 'عرض التقرير الكامل على VirusTotal',
+    vtFallback: 'بيانات VirusTotal غير متاحة — النتيجة مبنية على تحليل إرشادي.',
   },
 };

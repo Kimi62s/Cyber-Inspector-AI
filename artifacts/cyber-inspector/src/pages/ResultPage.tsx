@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
-import { ArrowLeft, Download, RefreshCw, Share2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Download, RefreshCw, Share2, AlertTriangle, ShieldCheck, Info } from 'lucide-react';
+import { VTStatsPanel } from '../components/VTStatsPanel';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../hooks/useLanguage';
 import { ThreatScoreMeter } from '../components/ThreatScoreMeter';
@@ -99,6 +100,25 @@ export default function ResultPage() {
           </div>
         </motion.div>
       </div>
+
+      {/* VirusTotal panel — shown only for URL analyses that reached VT */}
+      {result.type === 'url' && (
+        result.virusTotal ? (
+          <div className="mb-8">
+            <VTStatsPanel stats={result.virusTotal} delay={0.2} />
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8 flex items-center gap-2 text-sm text-muted-foreground bg-secondary/40 border border-border/40 rounded-xl px-4 py-3"
+          >
+            <Info className="h-4 w-4 shrink-0" />
+            {t('vtFallback')}
+          </motion.div>
+        )
+      )}
 
       {/* Details Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
