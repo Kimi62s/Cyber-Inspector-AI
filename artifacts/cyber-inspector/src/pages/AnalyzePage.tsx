@@ -85,7 +85,7 @@ export default function AnalyzePage() {
     } catch (e) {
       console.error(e);
       setIsScanning(false);
-      setAnalyzeError('Analysis failed. Please try again.');
+      setAnalyzeError(t('analyzeFailed'));
     }
   };
 
@@ -173,7 +173,7 @@ export default function AnalyzePage() {
                       className="w-full h-48 bg-background/50 border border-primary/20 rounded-xl p-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-mono text-sm outline-none"
                     />
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">{input.length} chars</span>
+                      <span className="text-muted-foreground">{input.length} {t('chars')}</span>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -284,9 +284,9 @@ export default function AnalyzePage() {
                           className={`h-12 w-12 mb-4 transition-colors ${isDragging ? 'text-primary' : 'text-muted-foreground'}`}
                         />
                         <p className={`font-medium transition-colors ${isDragging ? 'text-primary' : 'text-muted-foreground'}`}>
-                          Click or drag image to upload
+                          {t('dropImageHere')}
                         </p>
-                        <p className="text-xs text-muted-foreground/70 mt-2">Supports JPG, PNG (Max 5MB)</p>
+                        <p className="text-xs text-muted-foreground/70 mt-2">{t('dropImageFormats')}</p>
                       </div>
                     )}
                   </div>

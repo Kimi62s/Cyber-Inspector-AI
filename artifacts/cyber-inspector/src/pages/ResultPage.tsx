@@ -68,7 +68,7 @@ export default function ResultPage() {
         <Button variant="ghost" asChild className="gap-2 text-muted-foreground hover:text-foreground">
           <Link to="/analyze">
             <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
-            Back to Scanner
+            {t('backToScanner')}
           </Link>
         </Button>
         <div className="text-sm text-muted-foreground font-mono">

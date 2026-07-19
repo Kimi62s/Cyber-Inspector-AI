@@ -68,20 +68,20 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <FeatureCard 
               icon={<Zap className="h-8 w-8" />}
-              title="AI-Powered Detection"
-              description="Advanced heuristic analysis detects subtle patterns in phishing and scams."
+              title={t('featureAiTitle')}
+              description={t('featureAiDesc')}
               delay={0.1}
             />
             <FeatureCard 
               icon={<FileCheck className="h-8 w-8" />}
-              title="Detailed Reports"
-              description="Get comprehensive breakdowns of exactly why content was flagged."
+              title={t('featureReportsTitle')}
+              description={t('featureReportsDesc')}
               delay={0.2}
             />
             <FeatureCard 
               icon={<Lock className="h-8 w-8" />}
-              title="Privacy First"
-              description="Your data never leaves the browser. Analysis is safe and secure."
+              title={t('featurePrivacyTitle')}
+              description={t('featurePrivacyDesc')}
               delay={0.3}
             />
           </div>

@@ -72,7 +72,7 @@ export function VTStatsPanel({ stats, delay = 0 }: VTStatsPanelProps) {
             <span>{t('vtEngines')}: {stats.totalEngines}</span>
             {stats.malicious > 0 && (
               <span className="text-chart-4 font-medium">
-                {Math.round((stats.malicious / stats.totalEngines) * 100)}% malicious
+                {Math.round((stats.malicious / stats.totalEngines) * 100)}% {t('vtMaliciousPct')}
               </span>
             )}
           </div>
