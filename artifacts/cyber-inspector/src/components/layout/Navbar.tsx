@@ -25,7 +25,7 @@ export function Navbar() {
         }`}
         onClick={() => { playClickSound(); setIsOpen(false); }}
       >
-        {t('appName').split(' ')[0]}
+        {t('home')}
       </Link>
       <Link
         to="/analyze"
@@ -36,6 +36,25 @@ export function Navbar() {
       >
         {t('analyzeNow')}
       </Link>
+      <button
+        className="text-sm font-medium transition-colors hover:text-primary text-foreground/80"
+        onClick={() => {
+          playClickSound();
+          setIsOpen(false);
+
+          if (location.pathname !== "/") {
+            window.location.href = "/#response-center";
+            return;
+          }
+
+          document.getElementById("response-center")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }}
+      >
+        {t('responseCenter')}
+      </button>
     </>
   );
 
