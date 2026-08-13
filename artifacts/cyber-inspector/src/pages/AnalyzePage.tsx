@@ -36,6 +36,7 @@ export default function AnalyzePage() {
   const [qrFile, setQrFile] = useState<File | null>(null);
   const [qrResult, setQrResult] = useState("");
   const [qrError, setQrError] = useState("");
+  const [qrPreview, setQrPreview] = useState<string | null>(null);
 
   const isValidUrl = (value: string) => {
     try {
@@ -66,6 +67,14 @@ export default function AnalyzePage() {
       setQrError("Please upload a PNG or JPG image.");
       return;
     }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setQrPreview(reader.result as string);
+    };
+
+    reader.readAsDataURL(file);
 
     setQrFile(file);
     setQrResult("");
@@ -207,6 +216,7 @@ export default function AnalyzePage() {
     setInput("");
     setSelectedFile(null);
     setQrFile(null);
+    setQrPreview(null);
     setQrResult("");
     setQrError("");
     setUrlError("");
@@ -274,7 +284,9 @@ export default function AnalyzePage() {
               </div>
 
               {/* Input Area */}
-              <div className="mb-8 min-h-[200px]">
+              <div
+                className={`mb-8 ${activeTab === "qr" ? "" : "min-h-[200px]"}`}
+              >
                 {activeTab === "text" && (
                   <div className="space-y-4">
                     <textarea
@@ -430,50 +442,77 @@ export default function AnalyzePage() {
                     }}
                   />
 
-                  {qrFile ? (
-                    <div className="w-full h-48 border-2 border-primary/50 rounded-xl flex flex-col items-center justify-center bg-primary/5 relative">
-                      <QrCode className="h-12 w-12 text-primary mb-3" />
-
-                      <p className="font-medium text-foreground text-sm max-w-xs truncate px-4">
-                        {qrFile.name}
-                      </p>
-
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Ready to scan
-                      </p>
-
+                  {qrFile && qrPreview ? (
+                    <div className="relative w-full rounded-2xl border border-primary/30 bg-primary/5 p-5">
                       <button
                         type="button"
                         onClick={() => {
                           setQrFile(null);
+                          setQrPreview(null);
                           setQrResult("");
                           setQrError("");
                         }}
-                        className="absolute top-3 right-3 p-1 rounded-full bg-background/60 hover:bg-destructive/20 text-muted-foreground hover:text-destructive"
+                        className="absolute right-4 top-4 z-10 rounded-full bg-background/80 p-2 text-muted-foreground transition hover:bg-destructive/20 hover:text-destructive"
                         aria-label="Remove QR image"
                       >
                         <X className="h-4 w-4" />
                       </button>
+
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="flex h-52 w-52 items-center justify-center overflow-hidden rounded-xl border border-border bg-background p-3 shadow-lg">
+                          <img
+                            src={qrPreview}
+                            alt="QR code preview"
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+
+                        <div className="text-center">
+                          <p className="font-medium text-foreground">
+                            QR code ready to scan
+                          </p>
+
+                          <p className="mt-1 max-w-md truncate px-4 text-sm text-muted-foreground">
+                            {qrFile.name}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            document.getElementById("qr-file-input")?.click()
+                          }
+                          className="text-sm font-medium text-primary transition hover:text-primary/80"
+                        >
+                          Choose another image
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <label
                       htmlFor="qr-file-input"
-                      className="w-full h-48 border-2 border-dashed border-primary/30 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-background/30 hover:bg-primary/5 hover:border-primary/60 transition-all"
+                      className="group flex min-h-52 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 transition-all hover:border-primary/60 hover:bg-primary/10"
                     >
-                      <QrCode className="h-12 w-12 mb-4 text-muted-foreground" />
+                      <div className="mb-4 rounded-2xl bg-primary/10 p-4 transition-transform group-hover:scale-105">
+                        <QrCode className="h-9 w-9 text-primary" />
+                      </div>
 
-                      <p className="font-medium text-muted-foreground">
-                        Upload a QR code image
+                      <p className="font-medium text-foreground">
+                        Upload a QR code
                       </p>
 
-                      <p className="text-xs text-muted-foreground/70 mt-2">
-                        PNG or JPG
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        PNG or JPG image
+                      </p>
+
+                      <p className="mt-1 text-xs text-muted-foreground/70">
+                        We’ll scan it and check the destination safely
                       </p>
                     </label>
                   )}
 
                   {qrError && (
-                    <p className="text-sm text-destructive text-center">
+                    <p className="text-center text-sm text-destructive">
                       {qrError}
                     </p>
                   )}
