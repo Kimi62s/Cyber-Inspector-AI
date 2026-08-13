@@ -1,13 +1,22 @@
-import { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { FileText, Globe, Image as ImageIcon, UploadCloud, ShieldAlert, X } from 'lucide-react';
-import { useLanguage } from '../hooks/useLanguage';
-import { useSound } from '../hooks/useSound';
-import { useAnalysisHistory } from '../hooks/useAnalysisHistory';
-import { analyzeContent, AnalysisType } from '../services/analysis.service';
-import { Button } from '../components/ui/button';
-import { ScanAnimation } from '../components/ScanAnimation';
+import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import {
+  FileText,
+  Globe,
+  Image as ImageIcon,
+  UploadCloud,
+  ShieldAlert,
+  X,
+  QrCode,
+} from "lucide-react";
+import { useLanguage } from "../hooks/useLanguage";
+import { useSound } from "../hooks/useSound";
+import { useAnalysisHistory } from "../hooks/useAnalysisHistory";
+import { analyzeContent, AnalysisType } from "../services/analysis.service";
+import { Button } from "../components/ui/button";
+import { ScanAnimation } from "../components/ScanAnimation";
+import jsQR from "jsqr";
 
 export default function AnalyzePage() {
   const { t } = useLanguage();
@@ -16,18 +25,22 @@ export default function AnalyzePage() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [activeTab, setActiveTab] = useState<AnalysisType>('text');
-  const [input, setInput] = useState('');
+  type AnalyzeTab = AnalysisType | "qr";
+  const [activeTab, setActiveTab] = useState<AnalyzeTab>("text");
+  const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [urlError, setUrlError] = useState('');
-  const [analyzeError, setAnalyzeError] = useState('');
+  const [urlError, setUrlError] = useState("");
+  const [analyzeError, setAnalyzeError] = useState("");
+  const [qrFile, setQrFile] = useState<File | null>(null);
+  const [qrResult, setQrResult] = useState("");
+  const [qrError, setQrError] = useState("");
 
   const isValidUrl = (value: string) => {
     try {
       const url = new URL(value.trim());
-      return url.protocol === 'http:' || url.protocol === 'https:';
+      return url.protocol === "http:" || url.protocol === "https:";
     } catch {
       return false;
     }
@@ -35,9 +48,10 @@ export default function AnalyzePage() {
 
   const canSubmit = () => {
     if (isScanning) return false;
-    if (activeTab === 'text') return input.trim().length > 0;
-    if (activeTab === 'url') return input.trim().length > 0;
-    if (activeTab === 'image') return selectedFile !== null;
+    if (activeTab === "text") return input.trim().length > 0;
+    if (activeTab === "url") return input.trim().length > 0;
+    if (activeTab === "image") return selectedFile !== null;
+    if (activeTab === "qr") return qrFile !== null;
     return false;
   };
 
@@ -47,20 +61,108 @@ export default function AnalyzePage() {
     setInput(file.name);
   };
 
+  const handleQrSelect = async (file: File) => {
+    if (!file.type.match(/^image\/(png|jpeg|jpg)$/)) {
+      setQrError("Please upload a PNG or JPG image.");
+      return;
+    }
+
+    setQrFile(file);
+    setQrResult("");
+    setQrError("");
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) handleFileSelect(file);
   };
+  const decodeQrFromFile = async (file: File): Promise<string | null> => {
+    const image = new Image();
+
+    const imageUrl = URL.createObjectURL(file);
+
+    try {
+      image.src = imageUrl;
+
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error("Unable to load image"));
+      });
+
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+
+      if (!context) {
+        throw new Error("Canvas is not supported");
+      }
+
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+
+      context.drawImage(image, 0, 0);
+
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+      const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+      return code?.data ?? null;
+    } finally {
+      URL.revokeObjectURL(imageUrl);
+    }
+  };
 
   const handleAnalyze = async () => {
-    setAnalyzeError('');
+    setAnalyzeError("");
+    if (activeTab === "qr") {
+      if (!qrFile) return;
+
+      playClickSound();
+      setIsScanning(true);
+      playScanSound();
+
+      try {
+        const decoded = await decodeQrFromFile(qrFile);
+
+        if (!decoded) {
+          throw new Error("No QR code detected");
+        }
+
+        setQrResult(decoded);
+
+        const decodedUrl = decoded.trim();
+
+        if (!isValidUrl(decodedUrl)) {
+          throw new Error("QR code does not contain a valid URL");
+        }
+
+        const result = await analyzeContent("url", decodedUrl);
+
+        saveToHistory(result);
+        playCompleteSound();
+
+        navigate(`/result/${result.id}`, {
+          state: { result },
+        });
+      } catch (error) {
+        console.error(error);
+        setIsScanning(false);
+
+        setAnalyzeError(
+          error instanceof Error
+            ? error.message
+            : "Unable to analyze this QR code.",
+        );
+      }
+
+      return;
+    }
 
     // URL validation
-    if (activeTab === 'url') {
+    if (activeTab === "url") {
       if (!input.trim() || !isValidUrl(input.trim())) {
-        setUrlError(t('invalidUrl'));
+        setUrlError(t("invalidUrl"));
         return;
       }
     }
@@ -73,8 +175,8 @@ export default function AnalyzePage() {
 
     try {
       const analysisInput =
-        activeTab === 'image'
-          ? selectedFile?.name ?? 'image-upload.png'
+        activeTab === "image"
+          ? (selectedFile?.name ?? "image-upload.png")
           : input.trim();
 
       const result = await analyzeContent(activeTab, analysisInput);
@@ -85,36 +187,39 @@ export default function AnalyzePage() {
     } catch (e) {
       console.error(e);
       setIsScanning(false);
-      setAnalyzeError(t('analyzeFailed'));
+      setAnalyzeError(t("analyzeFailed"));
     }
   };
 
   const loadExample = (type: string) => {
-    if (type === 'text') {
+    if (type === "text") {
       setInput(
-        'URGENT: Your bank account has been suspended due to suspicious activity. Click here to verify your identity and restore access: http://bank-secure-verify.xyz/login',
+        "URGENT: Your bank account has been suspended due to suspicious activity. Click here to verify your identity and restore access: http://bank-secure-verify.xyz/login",
       );
-    } else if (type === 'url') {
-      setInput('http://bank-secure-verify.xyz/login');
-      setUrlError('');
+    } else if (type === "url") {
+      setInput("http://bank-secure-verify.xyz/login");
+      setUrlError("");
     }
   };
 
-  const handleTabChange = (tab: AnalysisType) => {
+  const handleTabChange = (tab: AnalyzeTab) => {
     setActiveTab(tab);
-    setInput('');
+    setInput("");
     setSelectedFile(null);
-    setUrlError('');
-    setAnalyzeError('');
+    setQrFile(null);
+    setQrResult("");
+    setQrError("");
+    setUrlError("");
+    setAnalyzeError("");
   };
 
   return (
     <div className="container mx-auto px-4 py-12 flex-1 flex flex-col items-center justify-center max-w-4xl">
       <div className="text-center mb-12 w-full">
         <h1 className="text-4xl md:text-5xl font-black mb-4 glow-purple inline-block">
-          {t('analyzeTitle')}
+          {t("analyzeTitle")}
         </h1>
-        <p className="text-xl text-muted-foreground">{t('analyzeSubtitle')}</p>
+        <p className="text-xl text-muted-foreground">{t("analyzeSubtitle")}</p>
       </div>
 
       <div className="w-full glass rounded-2xl border-primary/20 p-6 md:p-8 shadow-2xl relative overflow-hidden">
@@ -143,50 +248,58 @@ export default function AnalyzePage() {
               {/* Tabs */}
               <div className="flex p-1 bg-secondary/50 rounded-xl mb-8 border border-border/50 overflow-x-auto">
                 <TabButton
-                  active={activeTab === 'text'}
-                  onClick={() => handleTabChange('text')}
+                  active={activeTab === "text"}
+                  onClick={() => handleTabChange("text")}
                   icon={<FileText className="h-5 w-5" />}
-                  label={t('pasteText')}
+                  label={t("pasteText")}
                 />
                 <TabButton
-                  active={activeTab === 'url'}
-                  onClick={() => handleTabChange('url')}
+                  active={activeTab === "url"}
+                  onClick={() => handleTabChange("url")}
                   icon={<Globe className="h-5 w-5" />}
-                  label={t('analyzeUrl')}
+                  label={t("analyzeUrl")}
                 />
                 <TabButton
-                  active={activeTab === 'image'}
-                  onClick={() => handleTabChange('image')}
+                  active={activeTab === "image"}
+                  onClick={() => handleTabChange("image")}
                   icon={<ImageIcon className="h-5 w-5" />}
-                  label={t('uploadImage')}
+                  label={t("uploadImage")}
+                />
+                <TabButton
+                  active={activeTab === "qr"}
+                  onClick={() => handleTabChange("qr")}
+                  icon={<QrCode className="h-5 w-5" />}
+                  label="Scan QR"
                 />
               </div>
 
               {/* Input Area */}
               <div className="mb-8 min-h-[200px]">
-                {activeTab === 'text' && (
+                {activeTab === "text" && (
                   <div className="space-y-4">
                     <textarea
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder={t('textPlaceholder')}
+                      placeholder={t("textPlaceholder")}
                       className="w-full h-48 bg-background/50 border border-primary/20 rounded-xl p-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-mono text-sm outline-none"
                     />
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">{input.length} {t('chars')}</span>
+                      <span className="text-muted-foreground">
+                        {input.length} {t("chars")}
+                      </span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => loadExample('text')}
+                        onClick={() => loadExample("text")}
                         className="text-primary hover:text-primary/80"
                       >
-                        {t('exampleText')}
+                        {t("exampleText")}
                       </Button>
                     </div>
                   </div>
                 )}
 
-                {activeTab === 'url' && (
+                {activeTab === "url" && (
                   <div className="space-y-4 pt-8">
                     <div className="relative">
                       <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-6 w-6" />
@@ -195,16 +308,18 @@ export default function AnalyzePage() {
                         value={input}
                         onChange={(e) => {
                           setInput(e.target.value);
-                          setUrlError('');
+                          setUrlError("");
                         }}
                         onBlur={() => {
                           if (input.trim() && !isValidUrl(input.trim())) {
-                            setUrlError(t('invalidUrl'));
+                            setUrlError(t("invalidUrl"));
                           }
                         }}
-                        placeholder={t('urlPlaceholder')}
+                        placeholder={t("urlPlaceholder")}
                         className={`w-full bg-background/50 border rounded-xl py-4 pl-14 pr-4 text-lg text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary transition-all font-mono outline-none ${
-                          urlError ? 'border-destructive focus:border-destructive' : 'border-primary/20 focus:border-primary'
+                          urlError
+                            ? "border-destructive focus:border-destructive"
+                            : "border-primary/20 focus:border-primary"
                         }`}
                       />
                     </div>
@@ -218,16 +333,16 @@ export default function AnalyzePage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => loadExample('url')}
+                        onClick={() => loadExample("url")}
                         className="text-primary hover:text-primary/80"
                       >
-                        {t('exampleUrl')}
+                        {t("exampleUrl")}
                       </Button>
                     </div>
                   </div>
                 )}
 
-                {activeTab === 'image' && (
+                {activeTab === "image" && (
                   <div className="space-y-4">
                     {/* Hidden real file input */}
                     <input
@@ -254,8 +369,9 @@ export default function AnalyzePage() {
                         <button
                           onClick={() => {
                             setSelectedFile(null);
-                            setInput('');
-                            if (fileInputRef.current) fileInputRef.current.value = '';
+                            setInput("");
+                            if (fileInputRef.current)
+                              fileInputRef.current.value = "";
                           }}
                           className="absolute top-3 right-3 p-1 rounded-full bg-background/60 hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
                           aria-label="Remove file"
@@ -270,28 +386,99 @@ export default function AnalyzePage() {
                         tabIndex={0}
                         aria-label="Upload image"
                         onClick={() => fileInputRef.current?.click()}
-                        onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
-                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && fileInputRef.current?.click()
+                        }
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsDragging(true);
+                        }}
                         onDragLeave={() => setIsDragging(false)}
                         onDrop={handleDrop}
                         className={`w-full h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all select-none ${
                           isDragging
-                            ? 'border-primary bg-primary/10 scale-[1.01]'
-                            : 'border-primary/30 bg-background/30 hover:bg-primary/5 hover:border-primary/60'
+                            ? "border-primary bg-primary/10 scale-[1.01]"
+                            : "border-primary/30 bg-background/30 hover:bg-primary/5 hover:border-primary/60"
                         }`}
                       >
                         <UploadCloud
-                          className={`h-12 w-12 mb-4 transition-colors ${isDragging ? 'text-primary' : 'text-muted-foreground'}`}
+                          className={`h-12 w-12 mb-4 transition-colors ${isDragging ? "text-primary" : "text-muted-foreground"}`}
                         />
-                        <p className={`font-medium transition-colors ${isDragging ? 'text-primary' : 'text-muted-foreground'}`}>
-                          {t('dropImageHere')}
+                        <p
+                          className={`font-medium transition-colors ${isDragging ? "text-primary" : "text-muted-foreground"}`}
+                        >
+                          {t("dropImageHere")}
                         </p>
-                        <p className="text-xs text-muted-foreground/70 mt-2">{t('dropImageFormats')}</p>
+                        <p className="text-xs text-muted-foreground/70 mt-2">
+                          {t("dropImageFormats")}
+                        </p>
                       </div>
                     )}
                   </div>
                 )}
               </div>
+              {activeTab === "qr" && (
+                <div className="space-y-4">
+                  <input
+                    type="file"
+                    accept=".png,.jpg,.jpeg,image/png,image/jpeg"
+                    className="hidden"
+                    id="qr-file-input"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleQrSelect(file);
+                    }}
+                  />
+
+                  {qrFile ? (
+                    <div className="w-full h-48 border-2 border-primary/50 rounded-xl flex flex-col items-center justify-center bg-primary/5 relative">
+                      <QrCode className="h-12 w-12 text-primary mb-3" />
+
+                      <p className="font-medium text-foreground text-sm max-w-xs truncate px-4">
+                        {qrFile.name}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Ready to scan
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQrFile(null);
+                          setQrResult("");
+                          setQrError("");
+                        }}
+                        className="absolute top-3 right-3 p-1 rounded-full bg-background/60 hover:bg-destructive/20 text-muted-foreground hover:text-destructive"
+                        aria-label="Remove QR image"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label
+                      htmlFor="qr-file-input"
+                      className="w-full h-48 border-2 border-dashed border-primary/30 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-background/30 hover:bg-primary/5 hover:border-primary/60 transition-all"
+                    >
+                      <QrCode className="h-12 w-12 mb-4 text-muted-foreground" />
+
+                      <p className="font-medium text-muted-foreground">
+                        Upload a QR code image
+                      </p>
+
+                      <p className="text-xs text-muted-foreground/70 mt-2">
+                        PNG or JPG
+                      </p>
+                    </label>
+                  )}
+
+                  {qrError && (
+                    <p className="text-sm text-destructive text-center">
+                      {qrError}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Error message */}
               {analyzeError && (
@@ -309,7 +496,7 @@ export default function AnalyzePage() {
                 onClick={handleAnalyze}
               >
                 <ShieldAlert className="mr-3 h-6 w-6 rtl:ml-3 rtl:mr-0" />
-                {t('analyzeButton')}
+                {t("analyzeButton")}
               </Button>
             </motion.div>
           )}
@@ -335,8 +522,8 @@ function TabButton({
       onClick={onClick}
       className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all whitespace-nowrap ${
         active
-          ? 'bg-primary text-primary-foreground shadow-md'
-          : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+          ? "bg-primary text-primary-foreground shadow-md"
+          : "text-muted-foreground hover:text-foreground hover:bg-white/5"
       }`}
     >
       {icon}
