@@ -259,14 +259,16 @@ function buildRecommendations(
 }
 
 function heuristicScore(url: string): number {
-  // Used ONLY in the no-VT fallback path. Thresholds match the new risk bands.
+  // Used ONLY in the no-VT fallback path.
   const lower = url.toLowerCase();
   const dangerous = ['bank', 'password', 'urgent', 'verify', 'secure', 'account', 'winner', 'prize', '.xyz', '.tk', '.ml'];
-  const hasDangerous = dangerous.some(kw => lower.includes(kw));
-  return hasDangerous
-    ? Math.floor(Math.random() * 30 + 61)  // 61–90  → Dangerous
-    : Math.floor(Math.random() * 8 + 2);   // 2–9    → Safe
+  const hits = dangerous.filter(kw => lower.includes(kw)).length;
+  if (hits === 0) return 5;   // Safe
+  if (hits === 1) return 45;  // Suspicious
+  if (hits === 2) return 65;  // Dangerous
+  return 80;                  // Dangerous
 }
+
 
 function buildFallbackResult(url: string): AnalysisResult {
   const score = heuristicScore(url);
